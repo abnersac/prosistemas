@@ -14,6 +14,7 @@ app.get('/', (_req, res) => {
     endpoints: ['/api/logs', '/api/health'],
   });
 });
+//verificando codigo de app para la conexion
 
 app.use('/api/logs', logsRouter);
 app.use('/api/health', healthRouter);
