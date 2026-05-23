@@ -157,7 +157,9 @@ Tu sketch actual (`Brazo_robotico.ino`) usa **Bluetooth**, no WiFi. Tienes dos c
 
 ## IP pública del servidor
 
-> Completar después del despliegue: `http://XXX.XXX.XXX.XXX/`
+- **Dashboard:** http://157.230.187.111/
+- **API:** http://157.230.187.111:3000/api/logs
+- **Health:** http://157.230.187.111:3000/api/health
 
 ## Autores / Grupo
 

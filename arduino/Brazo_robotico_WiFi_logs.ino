@@ -12,7 +12,7 @@
 
 const char* WIFI_SSID = "TU_RED_WIFI";
 const char* WIFI_PASS = "TU_PASSWORD_WIFI";
-const char* SERVER_HOST = "TU_IP_PUBLICA";  // ej. "164.92.x.x"
+const char* SERVER_HOST = "157.230.187.111";
 const int SERVER_PORT = 3000;
 const char* DEVICE_ID = "brazo-robot-01";
 
