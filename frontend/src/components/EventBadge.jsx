@@ -3,6 +3,7 @@ const STYLES = {
   Alerta: 'bg-red-600/90 text-white',
   Notificación: 'bg-amber-500/90 text-black',
   Sensor: 'bg-emerald-600/90 text-white',
+  Comando: 'bg-violet-600/90 text-white',
   default: 'bg-slate-600 text-white',
 };
 
