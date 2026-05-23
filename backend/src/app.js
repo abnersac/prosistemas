@@ -1,3 +1,8 @@
+// app.js
+// Configuración de Express y rutas para el backend de robot-logs
+// Este archivo configura el servidor Express, define las rutas principales y maneja errores.
+// Importamos las dependencias necesarias
+// Express para crear el servidor, CORS para manejar solicitudes de diferentes orígenes, y los routers para logs y salud
 const express = require('express');
 const cors = require('cors');
 const logsRouter = require('./routes/logs');
