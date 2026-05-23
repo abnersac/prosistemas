@@ -35,6 +35,7 @@ int pinza = 40;
 unsigned long lastSensorCheck = 0;
 bool objetoAnterior = false;
 
+/* inicio de void setup y void loop*/
 void setup() {
   Serial.begin(9600);
 

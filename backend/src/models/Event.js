@@ -36,3 +36,5 @@ eventSchema.index({ timestamp: -1 });
 eventSchema.index({ device_id: 1, event_type: 1 });
 
 module.exports = mongoose.model('Event', eventSchema);
+
+//fin
