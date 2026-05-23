@@ -1,0 +1,54 @@
+services:
+  db:
+    image: mongo:latest
+    container_name: robot-mongodb
+    restart: unless-stopped
+    networks:
+      - robot-net
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: robot-backend
+    restart: unless-stopped
+    networks:
+      - robot-net
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      MONGO_URI: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@db:27017/${MONGO_DATABASE}?authSource=admin
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: robot-frontend
+    restart: unless-stopped
+    networks:
+      - robot-net
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+networks:
+  robot-net:
+    driver: bridge
+
+volumes:
+  mongo_data:
+    driver: local
