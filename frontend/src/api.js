@@ -26,6 +26,18 @@ export async function postLog(body) {
   return data;
 }
 
+export async function markCommandTimeout(eventId) {
+  const response = await fetch(`${API_BASE}/api/logs/commands/${eventId}/ack`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: 'timeout' }),
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || 'No se pudo marcar timeout');
+  }
+}
+
 export async function sendCommandToRobot({ deviceId, command, commandName }) {
   return postLog({
     device_id: deviceId,

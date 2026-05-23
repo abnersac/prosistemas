@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { fetchHealth, fetchLogs, sendCommandToRobot } from './api';
+import { fetchHealth, fetchLogs, markCommandTimeout, sendCommandToRobot } from './api';
 import EventBadge from './components/EventBadge';
 import LogsTable from './components/LogsTable';
 
@@ -44,16 +44,12 @@ function matchesFilters(event, { deviceId, eventType, dateFrom, dateTo }) {
   return true;
 }
 
-function robotAckedCommand(events, deviceId, command, afterMs) {
+function robotAckedCommand(events, commandEventId, afterMs) {
   return events.some((ev) => {
-    if (ev.device_id !== deviceId) return false;
     if (new Date(ev.timestamp).getTime() < afterMs) return false;
     const p = ev.data_payload || {};
-    if (p.ack_command === command) return true;
-    if (p.comando === command) return true;
-    if (ev.event_type === 'Movimiento' && String(p.comando || '').startsWith(command[0])) {
-      return true;
-    }
+    if (p.ack_for_event_id === commandEventId) return true;
+    if (ev._id === commandEventId && p.status === 'acknowledged') return true;
     return false;
   });
 }
@@ -202,22 +198,23 @@ export default function App() {
     });
 
     try {
-      await sendCommandToRobot({
+      const res = await sendCommandToRobot({
         deviceId: cmdDevice,
         command: cmd.code,
         commandName: cmd.name,
       });
+      const commandEventId = res.data?._id;
 
       pushCmdLog({
         level: 'ok',
-        message: `Comando ${cmd.code} registrado. Esperando respuesta del robot…`,
+        message: `Comando ${cmd.code} en cola. La app Flutter debe estar conectada por Bluetooth.`,
         at: new Date().toISOString(),
       });
 
       const checkResponse = setInterval(async () => {
         try {
-          const res = await fetchLogs(80);
-          if (robotAckedCommand(res.data || [], cmdDevice, cmd.code, sentAt)) {
+          const logsRes = await fetchLogs(80);
+          if (commandEventId && robotAckedCommand(logsRes.data || [], commandEventId, sentAt)) {
             clearInterval(checkResponse);
             clearTimeout(timeoutId);
             const msg = `Robot confirmó ejecución: ${cmd.code}`;
@@ -233,10 +230,17 @@ export default function App() {
         }
       }, 2000);
 
-      const timeoutId = setTimeout(() => {
+      const timeoutId = setTimeout(async () => {
         clearInterval(checkResponse);
         const msg =
           'El robot no respondió en 30 s. Verifique la app Flutter y la conexión Bluetooth.';
+        if (commandEventId) {
+          try {
+            await markCommandTimeout(commandEventId);
+          } catch {
+            /* ignorar */
+          }
+        }
         pushCmdLog({ level: 'error', message: msg, at: new Date().toISOString() });
         setCmdHistory((prev) =>
           prev.map((h) =>
@@ -572,8 +576,8 @@ export default function App() {
               </div>
             </div>
             <p className="text-xs text-slate-500">
-              Los comandos se registran con POST /api/logs. La confirmación del robot se detecta si
-              la app Flutter envía un movimiento relacionado en los siguientes 30 segundos.
+              Requisitos: app Flutter abierta, Bluetooth conectado al brazo. La app consulta comandos
+              pendientes cada 2 s y mueve el robot. Si no hay conexión, verá timeout a los 30 s.
             </p>
           </section>
         )}

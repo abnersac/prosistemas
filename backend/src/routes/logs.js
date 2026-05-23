@@ -56,6 +56,88 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/commands/pending', async (req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(500).json({
+        success: false,
+        message: 'Base de datos no disponible',
+      });
+    }
+
+    const { device_id } = req.query;
+    if (!device_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'device_id es obligatorio',
+      });
+    }
+
+    const data = await Event.find({
+      device_id: String(device_id),
+      event_type: 'Comando',
+      'data_payload.status': 'sent',
+      'data_payload.source': 'dashboard',
+    })
+      .sort({ timestamp: 1 })
+      .limit(20)
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      count: data.length,
+      data,
+    });
+  } catch (error) {
+    console.error('GET /api/logs/commands/pending error:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Error al obtener comandos pendientes',
+    });
+  }
+});
+
+router.post('/commands/:id/ack', async (req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(500).json({
+        success: false,
+        message: 'Base de datos no disponible',
+      });
+    }
+
+    const event = await Event.findById(req.params.id);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Comando no encontrado',
+      });
+    }
+
+    const newStatus = req.body?.status === 'timeout' ? 'timeout' : 'acknowledged';
+
+    event.data_payload = {
+      ...event.data_payload,
+      status: newStatus,
+      acknowledged_at: new Date().toISOString(),
+      robot_response: req.body?.response ?? {},
+    };
+    event.markModified('data_payload');
+    await event.save();
+
+    return res.status(200).json({
+      success: true,
+      data: event.toObject(),
+    });
+  } catch (error) {
+    console.error('POST /api/logs/commands/:id/ack error:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Error al confirmar comando',
+    });
+  }
+});
+
 router.get('/', async (req, res) => {
   try {
     if (mongoose.connection.readyState !== 1) {
