@@ -168,3 +168,8 @@ int medirDistancia() {
   if (lecturasValidas == 0) return 0;
   return suma / lecturasValidas;
 }
+
+// Funciones de control de movimiento (ejemplo para base, puedes agregar para otros ejes)
+// void moverBase(int nuevoValor) {
+//   moverServo(servoBase, base, nuevoValor, "base"); 
+// }
