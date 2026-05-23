@@ -1,5 +1,5 @@
 const API_BASE = import.meta.env.VITE_API_URL || '';
-
+//solucionando rutas
 export async function fetchLogs(limit = 500) {
   const response = await fetch(`${API_BASE}/api/logs?limit=${limit}`);
   if (!response.ok) {
